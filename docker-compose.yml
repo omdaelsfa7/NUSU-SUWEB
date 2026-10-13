@@ -1,0 +1,41 @@
+services:
+  suweb_postgres:
+    image: postgres:16-alpine
+    container_name: suweb_postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: suweb_db
+      POSTGRES_USER: su_admin
+      POSTGRES_PASSWORD: su_password123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U su_admin -d suweb_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  suweb_minio:
+    image: minio/minio:latest
+    container_name: suweb_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadminpassword
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'cat < /dev/null > /dev/tcp/127.0.0.1/9000' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  minio_data:
