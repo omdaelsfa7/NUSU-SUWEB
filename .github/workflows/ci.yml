@@ -10,9 +10,9 @@ jobs:
   backend-ci:
     name: Backend CI
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./backend
+    env:
+      DATABASE_URL: "postgresql://su_admin:su_password123@localhost:5432/suweb_db?schema=public"
+      JWT_SECRET: "nusu-super-secret-jwt-key-2026"
 
     services:
       postgres:
@@ -41,31 +41,42 @@ jobs:
           cache-dependency-path: ./backend/package-lock.json
 
       - name: Install dependencies
+        working-directory: ./backend
         run: npm ci
 
       - name: Generate Prisma Client
+        working-directory: ./backend
         run: npx prisma generate
 
       - name: Build backend
+        working-directory: ./backend
         run: npm run build
 
       - name: Run backend tests
+        working-directory: ./backend
         run: npm test
         continue-on-error: true
 
   frontend-ci:
     name: Frontend CI
     runs-on: ubuntu-latest
-    if: ${{ hashFiles('frontend/package.json') != '' }}
-    defaults:
-      run:
-        working-directory: ./frontend
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Check if frontend exists
+        id: check_frontend
+        run: |
+          if [ -f "frontend/package.json" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Frontend not yet scaffolded. Skipping gracefully until Phase 3."
+          fi
+
       - name: Setup Node.js 20
+        if: steps.check_frontend.outputs.exists == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -73,10 +84,16 @@ jobs:
           cache-dependency-path: ./frontend/package-lock.json
 
       - name: Install dependencies
+        if: steps.check_frontend.outputs.exists == 'true'
+        working-directory: ./frontend
         run: npm ci
 
       - name: Run linting
+        if: steps.check_frontend.outputs.exists == 'true'
+        working-directory: ./frontend
         run: npm run lint
 
       - name: Build frontend
+        if: steps.check_frontend.outputs.exists == 'true'
+        working-directory: ./frontend
         run: npm run build
