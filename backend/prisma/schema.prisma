@@ -1,0 +1,50 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model AdminUser {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+}
+
+model BoardMember {
+  id        String   @id @default(uuid())
+  name      String
+  role      String
+  committee String
+  major     String?
+  email     String?
+  linkedin  String?
+  imageUrl  String   // Public URL in MinIO bucket
+  bio       String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  date        DateTime
+  location    String
+  category    String   // Academic, Social, Sports, Townhall
+  imageUrl    String?  // Poster stored in MinIO
+  createdAt   DateTime @default(now())
+}
+
+model HighlightVideo {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  videoUrl    String   // Direct raw video file URL in MinIO
+  posterUrl   String?  // Optional thumbnail image stored in MinIO
+  createdAt   DateTime @default(now())
+}
