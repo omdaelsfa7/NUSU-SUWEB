@@ -86,7 +86,7 @@ jobs:
       - name: Install dependencies
         if: steps.check_frontend.outputs.exists == 'true'
         working-directory: ./frontend
-        run: npm ci
+        run: npm install
 
       - name: Run linting
         if: steps.check_frontend.outputs.exists == 'true'
